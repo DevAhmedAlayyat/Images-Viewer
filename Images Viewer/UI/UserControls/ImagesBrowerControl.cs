@@ -1,4 +1,5 @@
-﻿using Images_Viewer.UI.Forms;
+﻿using DevExpress.XtraEditors;
+using Images_Viewer.UI.Forms;
 using System;
 using System.IO;
 using System.Windows.Forms;
@@ -16,12 +17,28 @@ namespace Images_Viewer.UI.UserControls
 
         private void simpleButton_OpenFolder_Click(object sender, EventArgs e)
         {
-            var dialogResult = xtraFolderBrowserDialog.ShowDialog();
-            if(dialogResult == DialogResult.OK)
+            try
             {
+                var dialogResult = xtraFolderBrowserDialog.ShowDialog();
+                if (dialogResult == DialogResult.OK)
+                {
+                    parentForm.imagePreviewerControl.ClearImage();
+                    parentForm.SplashScreenManager.ShowWaitForm();
+                    treeView_Images.Nodes.Clear();
+                    DirectoryInfo directoryInfo = new DirectoryInfo(xtraFolderBrowserDialog.SelectedPath);
+                    BuildTree(directoryInfo, treeView_Images.Nodes);
+                    parentForm.SplashScreenManager.CloseWaitForm();
+                }
+            }
+            catch (Exception ex)
+            {
+                parentForm.SplashScreenManager.CloseWaitForm();
                 treeView_Images.Nodes.Clear();
-                DirectoryInfo directoryInfo = new DirectoryInfo(xtraFolderBrowserDialog.SelectedPath);
-                BuildTree(directoryInfo, treeView_Images.Nodes);
+                if (ex is UnauthorizedAccessException)
+                {
+                    XtraMessageBox.Show("App has no access to load this folder.\r\nNote: try any folder in different partition. ex(d:\\ or e:\\)"
+                                        , "Access Denied", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                }
             }
         }
 
